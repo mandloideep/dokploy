@@ -1,5 +1,4 @@
 import { AlertBlock } from "@/components/shared/alert-block";
-import { ToggleVisibilityInput } from "@/components/shared/toggle-visibility-input";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -152,7 +151,7 @@ export const HandleSecurity = ({
 									<FormItem>
 										<FormLabel>Password</FormLabel>
 										<FormControl>
-											<ToggleVisibilityInput placeholder="test1" {...field} />
+											<Input type="password" placeholder="test1" {...field} />
 										</FormControl>
 
 										<FormMessage />
