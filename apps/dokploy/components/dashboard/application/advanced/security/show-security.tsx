@@ -11,6 +11,9 @@ import { api } from "@/utils/api";
 import { LockKeyhole, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { HandleSecurity } from "./handle-security";
+import { ToggleVisibilityInput } from "@/components/shared/toggle-visibility-input";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface Props {
 	applicationId: string;
@@ -61,16 +64,14 @@ export const ShowSecurity = ({ applicationId }: Props) => {
 									<div className="flex w-full flex-col sm:flex-row justify-between sm:items-center gap-4 sm:gap-10 border rounded-lg p-4">
 										<div className="grid grid-cols-1 sm:grid-cols-2 flex-col gap-4 sm:gap-8">
 											<div className="flex flex-col gap-1">
-												<span className="font-medium">Username</span>
-												<span className="text-sm text-muted-foreground">
-													{security.username}
-												</span>
+												<Label>User</Label>
+												<Input disabled value={security.username} />
 											</div>
 											<div className="flex flex-col gap-1">
-												<span className="font-medium">Password</span>
-												<span className="text-sm text-muted-foreground">
-													{security.password}
-												</span>
+												<Label>Password</Label>
+												<div className="flex flex-row gap-4">
+													<ToggleVisibilityInput disabled value={security.password} />
+												</div>
 											</div>
 										</div>
 										<div className="flex flex-row gap-2">
