@@ -31,6 +31,14 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { useLocalStorageState } from "@/hooks/useLocalStorage";
 import { api } from "@/utils/api";
 import {
 	AlertTriangle,
@@ -48,21 +56,90 @@ import { toast } from "sonner";
 import { HandleProject } from "./handle-project";
 import { ProjectEnvironment } from "./project-environment";
 
+const calculateTotalServices = (project: {
+	mariadb: unknown[];
+	mongo: unknown[];
+	mysql: unknown[];
+	postgres: unknown[];
+	redis: unknown[];
+	applications: unknown[];
+	compose: unknown[];
+}) => {
+	return (
+		project.mariadb.length +
+		project.mongo.length +
+		project.mysql.length +
+		project.postgres.length +
+		project.redis.length +
+		project.applications.length +
+		project.compose.length
+	);
+};
+
+const sortOptions = [
+	{
+		value: "date-desc",
+		label: "Creation Date (Newest)",
+		sortFn: (a: any, b: any) =>
+			new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+	},
+	{
+		value: "date-asc",
+		label: "Creation Date (Oldest)",
+		sortFn: (a: any, b: any) =>
+			new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+	},
+	{
+		value: "name-asc",
+		label: "Name (A–Z)",
+		sortFn: (a: any, b: any) => a.name.localeCompare(b.name),
+	},
+	{
+		value: "name-desc",
+		label: "Name (Z–A)",
+		sortFn: (a: any, b: any) => b.name.localeCompare(a.name),
+	},
+	{
+		value: "services-desc",
+		label: "Services (Most)",
+		sortFn: (a: any, b: any) => calculateTotalServices(b) - calculateTotalServices(a),
+	},
+	{
+		value: "services-asc",
+		label: "Services (Least)",
+		sortFn: (a: any, b: any) => calculateTotalServices(a) - calculateTotalServices(b),
+	},
+] as const;
+
 export const ShowProjects = () => {
 	const utils = api.useUtils();
 	const { data, isLoading } = api.project.all.useQuery();
 	const { data: auth } = api.user.get.useQuery();
 	const { mutateAsync } = api.project.remove.useMutation();
 	const [searchQuery, setSearchQuery] = useState("");
+	const [sortBy, setSortBy] = useLocalStorageState<string>(
+		"dokploy-projects-sort",
+		"date-desc",
+	);
 
-	const filteredProjects = useMemo(() => {
+	const filteredAndSortedProjects = useMemo(() => {
 		if (!data) return [];
-		return data.filter(
+
+		// 1. Filter by search query
+		const filtered = data.filter(
 			(project) =>
 				project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
 				project.description?.toLowerCase().includes(searchQuery.toLowerCase()),
 		);
-	}, [data, searchQuery]);
+
+		// 2. Apply sorting
+		const selectedSort = sortOptions.find((opt) => opt.value === sortBy);
+		if (selectedSort) {
+			return [...filtered].sort(selectedSort.sortFn);
+		}
+
+		return filtered;
+	}, [data, searchQuery, sortBy]);
 
 	return (
 		<>
@@ -98,16 +175,31 @@ export const ShowProjects = () => {
 								</div>
 							) : (
 								<>
-									<div className="w-full relative">
-										<Input
-											placeholder="Filter projects..."
-											value={searchQuery}
-											onChange={(e) => setSearchQuery(e.target.value)}
-											className="pr-10"
-										/>
-										<Search className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+									<div className="flex items-center gap-2 max-sm:flex-wrap w-full">
+										<div className="relative flex-1 md:max-w-sm">
+											<Input
+												placeholder="Filter projects..."
+												value={searchQuery}
+												onChange={(e) => setSearchQuery(e.target.value)}
+												className="pr-10"
+											/>
+											<Search className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+										</div>
+
+										<Select value={sortBy} onValueChange={setSortBy}>
+											<SelectTrigger className="w-[220px] max-sm:w-full">
+												<SelectValue placeholder="Sort by..." />
+											</SelectTrigger>
+											<SelectContent>
+												{sortOptions.map((option) => (
+													<SelectItem key={option.value} value={option.value}>
+														{option.label}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
 									</div>
-									{filteredProjects?.length === 0 && (
+									{filteredAndSortedProjects?.length === 0 && (
 										<div className="mt-6 flex h-[50vh] w-full flex-col items-center justify-center space-y-4">
 											<FolderInput className="size-8 self-center text-muted-foreground" />
 											<span className="text-center font-medium text-muted-foreground">
@@ -116,7 +208,7 @@ export const ShowProjects = () => {
 										</div>
 									)}
 									<div className="w-full grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 flex-wrap gap-5">
-										{filteredProjects?.map((project) => {
+										{filteredAndSortedProjects?.map((project) => {
 											const emptyServices =
 												project?.mariadb.length === 0 &&
 												project?.mongo.length === 0 &&
