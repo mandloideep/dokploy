@@ -1,3 +1,4 @@
+import { useSearchShortcut } from "@/hooks/use-search-shortcut";
 import { BreadcrumbSidebar } from "@/components/shared/breadcrumb-sidebar";
 import { DateTooltip } from "@/components/shared/date-tooltip";
 import { StatusTooltip } from "@/components/shared/status-tooltip";
@@ -49,6 +50,7 @@ import { HandleProject } from "./handle-project";
 import { ProjectEnvironment } from "./project-environment";
 
 export const ShowProjects = () => {
+	const searchInputRef = useSearchShortcut();
 	const utils = api.useUtils();
 	const { data, isLoading } = api.project.all.useQuery();
 	const { data: auth } = api.user.get.useQuery();
@@ -100,6 +102,7 @@ export const ShowProjects = () => {
 								<>
 									<div className="w-full relative">
 										<Input
+											ref={searchInputRef}
 											placeholder="Filter projects..."
 											value={searchQuery}
 											onChange={(e) => setSearchQuery(e.target.value)}
