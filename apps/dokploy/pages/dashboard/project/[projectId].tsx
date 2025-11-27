@@ -1,3 +1,4 @@
+import { useSearchShortcut } from "@/hooks/use-search-shortcut";
 import { AddApplication } from "@/components/dashboard/project/add-application";
 import { AddCompose } from "@/components/dashboard/project/add-compose";
 import { AddDatabase } from "@/components/dashboard/project/add-database";
@@ -219,6 +220,7 @@ export const extractServices = (data: Project | undefined) => {
 const Project = (
 	props: InferGetServerSidePropsType<typeof getServerSideProps>,
 ) => {
+	const searchInputRef = useSearchShortcut();
 	const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
 	const { projectId } = props;
 	const { data: auth } = api.user.get.useQuery();
@@ -846,6 +848,7 @@ const Project = (
 										<div className="flex flex-col gap-2 lg:flex-row lg:gap-4 lg:items-center">
 											<div className="w-full relative">
 												<Input
+													ref={searchInputRef}
 													placeholder="Filter services..."
 													value={searchQuery}
 													onChange={(e) => setSearchQuery(e.target.value)}
